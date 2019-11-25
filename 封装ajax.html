@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AJAX 返回数据问题</title>
+</head>
+
+<body>
+    <!--  封装的套路：
+	     1. 写一个相对比较完善的用例
+	     2. 写一个空函数，没有形参，将刚刚的用例直接作为函数的函数体
+	     3. 根据使用过程中的需求抽象参数 -->
+    <script>
+    // 封装者=============================================
+    function ajax(method, url, params, done) {
+        method = method.toUpperCase();
+        var xhr = new XMLHttpRequest();
+
+        // 将 object 类型的参数转换为 key=value&key=value
+        if (typeof params === 'object') {
+            var tempArr = [];
+            for (var key in params) {
+                var value = params[key];
+                tempArr.push(key + '=' + value);
+            }
+            params = tempArr.join('&');
+        }
+
+        if (method === 'GET') {
+            url += '?' + params;
+        }
+
+        xhr.open(method, url, false);
+
+        var data = null;
+        if (method === 'POST') {
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            data = params;
+        }
+
+        xhr.onreadystatechange = function() {
+            if (this.readyState !== 4) return;
+            // 无法在内部包含的函数中通过return给外部函数的调用返回结果
+            // return this.responseText
+            //不应该在封装的函数中主观的处理响应结果,而是按照调用者的想法去处理
+            done(this.responseText);
+        };
+
+        xhr.send(data);
+    }
+
+    // 被委托者(按照调用者的想法处理)========================
+    var onDone = function(res) {
+        console.log('1');
+        console.log('2');
+        console.log(res);
+    };
+
+    // 调用者==============================================
+    ajax('get', 'time.php', { id: 3 }, onDone);
+    </script>
+</body>
+
+</html>
